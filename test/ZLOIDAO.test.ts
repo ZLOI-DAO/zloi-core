@@ -26,7 +26,7 @@ describe('ZLOI DAO tests', () => {
   beforeEach(async () => {
     [owner, alice, bob, ethBranchContract, bnbBranchContract] = await ethers.getSigners();
     const ZLOIDAO = await ethers.getContractFactory('ZLOIDAO', owner);
-    dao = (await ZLOIDAO.deploy(1000000000, 137, owner.address)) as ZLOIDAO;
+    dao = (await ZLOIDAO.deploy(1000000000, 100000000, 50000000, 137, owner.address)) as ZLOIDAO;
     await dao.deployed();
     const tokenAddress = await dao.token();
     token = new ethers.Contract(tokenAddress, ZLOIJson.abi, owner) as ZLOI;

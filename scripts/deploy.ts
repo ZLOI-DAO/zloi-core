@@ -3,11 +3,15 @@ import { ethers } from 'hardhat';
 async function main() {
   const [owner] = await ethers.getSigners();
   const ZLOIDAO = await ethers.getContractFactory('ZLOIDAO', owner);
-  const zloiDao = await ZLOIDAO.deploy();
+  const zloiDao = await ZLOIDAO.deploy(1000000000, 100000000, 50000000, 137, owner.address);
 
   await zloiDao.deployed();
 
   console.log(`DAO deployed to ${zloiDao.address}`);
+
+  const dex = await zloiDao.dex();
+
+  console.log(`DEX deployed to ${dex}`);
 
   const token = await zloiDao.token();
 

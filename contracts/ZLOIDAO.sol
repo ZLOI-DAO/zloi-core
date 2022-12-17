@@ -45,6 +45,8 @@ contract ZLOIDAO {
 
     constructor(
         uint256 tokensAmount_,
+        uint256 liquidityAmount_,
+        uint256 equipmentAmount_,
         uint32 chainId,
         address executor_
     ) {
@@ -60,9 +62,9 @@ contract ZLOIDAO {
             1
         );
         // To increase liquidity
-        _token.transfer(address(_dex), 100000000 * _decimalsMultiplier);
+        _token.transfer(address(_dex), liquidityAmount_ * _decimalsMultiplier);
         // To pay for equipment and marketing
-        _token.transfer(msg.sender, 50000000 * _decimalsMultiplier);
+        _token.transfer(msg.sender, equipmentAmount_ * _decimalsMultiplier);
     }
 
     function balance() public view returns (uint256) {
