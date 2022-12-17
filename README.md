@@ -1,5 +1,7 @@
 # ZLOI Core
 
+[![codecov](https://codecov.io/gh/ZLOI-DAO/zloi-core/branch/main/graph/badge.svg?token=DNA5EPBJGC)](https://codecov.io/gh/ZLOI-DAO/zloi-core)
+
 This repository contains the core smart contracts for the ZLOI DAO (Decentralized Automated Organization)
 
 ## Local tests
