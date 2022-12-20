@@ -13,6 +13,7 @@ const invalidInterfaceId = '0xffffffff';
 const erc20InterfaceId = '0x36372b07';
 const ethChain = 1;
 const bnbChain = 56;
+const avalancheChain = 43114;
 const transferFromBranchHash = '0x018429fe307666f293c857e18cea670b52cebc191553f99a664503018f46b50e';
 
 describe('ZLOI token tests', () => {
@@ -22,11 +23,13 @@ describe('ZLOI token tests', () => {
   let ethContract: SignerWithAddress;
   let newEthContract: SignerWithAddress;
   let bnbContract: SignerWithAddress;
+  let avalancheContract: SignerWithAddress;
   let token: ZLOI;
   const provider = ethers.provider;
 
   beforeEach(async () => {
-    [owner, alice, bob, ethContract, newEthContract, bnbContract] = await ethers.getSigners();
+    [owner, alice, bob, ethContract, newEthContract, bnbContract, avalancheContract] =
+      await ethers.getSigners();
     const ZLOIContract = await ethers.getContractFactory(nameSymbolContract, owner);
     token = (await ZLOIContract.deploy(
       nameSymbolContract,
@@ -354,6 +357,62 @@ describe('ZLOI token tests', () => {
         ethers.BigNumber.from(supplyStringTotal).add(amountTransferTokens).toString()
       );
       expect(reverseBranchSupply.toString(), 'branchSupply').to.eq(amountTransferTokens);
+    });
+
+    it('Transfer between branches', async () => {
+      const amountTransferTokens = ethers.BigNumber.from(supplyStringTotal).div(2).toString();
+
+      await expect(
+        token.connect(alice).transferBetweenBranches(ethChain, bnbChain, amountTransferTokens)
+      ).to.be.revertedWith('Ownable: caller is not the owner');
+      await expect(
+        token.transferBetweenBranches(currentChain, bnbChain, amountTransferTokens)
+      ).to.be.revertedWith('DAO: operation allowed only for branch');
+      await expect(
+        token.transferBetweenBranches(ethChain, currentChain, amountTransferTokens)
+      ).to.be.revertedWith('DAO: operation allowed only for branch');
+      await expect(
+        token.transferBetweenBranches(ethChain, bnbChain, amountTransferTokens)
+      ).to.be.revertedWith('DAO: branch not minted');
+      await token.createBranch(ethChain, ethContract.address, supply);
+      await expect(
+        token.transferBetweenBranches(ethChain, bnbChain, amountTransferTokens)
+      ).to.be.revertedWith('DAO: branch not minted');
+
+      await token.createBranch(avalancheChain, avalancheContract.address, supply);
+      await token.createBranch(bnbChain, bnbContract.address, supply);
+      await token.transferFromBranch(
+        avalancheChain,
+        supplyStringTotal,
+        transferFromBranchHash,
+        [owner.address],
+        [supplyStringTotal]
+      );
+      await token.deprecateBranch(avalancheChain);
+
+      await expect(
+        token.transferBetweenBranches(avalancheChain, bnbChain, amountTransferTokens)
+      ).to.be.revertedWith('DAO: branch is deprecated');
+
+      await token.transferBetweenBranches(ethChain, bnbChain, amountTransferTokens);
+
+      const totalSupply = await token.totalSupply();
+      const currentChainSupply = await token.currentChainSupply();
+      const branchSupply = await token.branchSupply(ethChain);
+      const branchBnbSupply = await token.branchSupply(bnbChain);
+
+      expect(totalSupply.toString(), 'totalSupply').to.eq(
+        ethers.BigNumber.from(supplyStringTotal).mul(4).toString()
+      );
+      expect(currentChainSupply.toString(), 'currentChainSupply').to.eq(
+        ethers.BigNumber.from(supplyStringTotal).mul(2).toString()
+      );
+      expect(branchSupply.toString(), 'branchSupply').to.eq(
+        ethers.BigNumber.from(supplyStringTotal).sub(amountTransferTokens).toString()
+      );
+      expect(branchBnbSupply.toString(), 'branchSupply').to.eq(
+        ethers.BigNumber.from(supplyStringTotal).add(amountTransferTokens).toString()
+      );
     });
 
     it('Deprecate branch', async () => {

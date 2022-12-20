@@ -179,6 +179,51 @@ contract ERC20 is IERC165, IERC20 {
         return true;
     }
 
+    function transferBetweenBranches(
+        uint32 fromChainId,
+        uint32 toChainId,
+        uint256 amount
+    ) public onlyOwner returns (bool) {
+        require(
+            (fromChainId != _currentChainId) && (toChainId != _currentChainId),
+            "DAO: operation allowed only for branch"
+        );
+
+        require(
+            (_distributedContracts[fromChainId] != address(0)) &&
+                (_distributedContracts[toChainId] != address(0)),
+            "DAO: branch not minted"
+        );
+
+        bool deprecated = false;
+        if (_deprecatedChains.length > 0) {
+            for (
+                uint256 i = 0;
+                i < _deprecatedChains.length && deprecated != true;
+                i++
+            ) {
+                if (
+                    (_deprecatedChains[i] == fromChainId) ||
+                    (_deprecatedChains[i] == toChainId)
+                ) {
+                    deprecated = true;
+                }
+            }
+        }
+        require(deprecated == false, "DAO: branch is deprecated");
+
+        require(
+            _distributedSupply[fromChainId] >= amount,
+            "ERC20: transfer amount exceeds balance"
+        );
+        unchecked {
+            _distributedSupply[fromChainId] -= amount;
+            _distributedSupply[toChainId] += amount;
+        }
+
+        return true;
+    }
+
     function transferFromBranch(
         uint32 chainId,
         uint256 amount,

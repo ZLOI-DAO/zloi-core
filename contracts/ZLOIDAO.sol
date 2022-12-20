@@ -219,6 +219,15 @@ contract ZLOIDAO {
         return true;
     }
 
+    function transferBetweenBranches(
+        uint32 fromChainId,
+        uint32 toChainId,
+        uint256 amount
+    ) public onlyOwner returns (bool) {
+        _token.transferBetweenBranches(fromChainId, toChainId, amount);
+        return true;
+    }
+
     function transferToBranch(
         uint256 operationId,
         uint256 amount,

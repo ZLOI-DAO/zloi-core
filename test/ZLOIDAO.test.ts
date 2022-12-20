@@ -251,6 +251,17 @@ describe('ZLOI DAO tests', () => {
     await dao.connect(alice).closeMoveToBranchOrder(ethChain);
   });
 
+  it('Check transfer between branches', async () => {
+    const balance = utils.parseEther('100');
+    await dao.createBranch(ethChain, ethBranchContract.address, 100, 0);
+    await dao.createBranch(bnbChain, bnbBranchContract.address, 0, 0);
+    await dao.transferBetweenBranches(ethChain, bnbChain, balance);
+    const chainBalance1 = await token.branchSupply(ethChain);
+    const chainBalance2 = await token.branchSupply(bnbChain);
+    expect(chainBalance1.toString(), 'Eth chain balance').to.eq('0');
+    expect(chainBalance2.toString(), 'Bnb chain balance').to.eq(balance.toString());
+  });
+
   it('Check send to branch', async () => {
     await expect(dao.connect(bob).transferToBranch(1, 1, ethChain, [], [])).to.be.revertedWith(
       'Ownable: forbidden'
