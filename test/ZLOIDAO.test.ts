@@ -253,6 +253,9 @@ describe('ZLOI DAO tests', () => {
 
   it('Check transfer between branches', async () => {
     const balance = utils.parseEther('100');
+    await expect(
+      dao.connect(bob).transferBetweenBranches(ethChain, bnbChain, balance)
+    ).to.be.revertedWith('Ownable: forbidden');
     await dao.createBranch(ethChain, ethBranchContract.address, 100, 0);
     await dao.createBranch(bnbChain, bnbBranchContract.address, 0, 0);
     await dao.transferBetweenBranches(ethChain, bnbChain, balance);

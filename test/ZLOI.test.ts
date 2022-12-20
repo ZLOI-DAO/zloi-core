@@ -14,6 +14,7 @@ const erc20InterfaceId = '0x36372b07';
 const ethChain = 1;
 const bnbChain = 56;
 const avalancheChain = 43114;
+const fantomChain = 250;
 const transferFromBranchHash = '0x018429fe307666f293c857e18cea670b52cebc191553f99a664503018f46b50e';
 
 describe('ZLOI token tests', () => {
@@ -24,12 +25,21 @@ describe('ZLOI token tests', () => {
   let newEthContract: SignerWithAddress;
   let bnbContract: SignerWithAddress;
   let avalancheContract: SignerWithAddress;
+  let fantomContract: SignerWithAddress;
   let token: ZLOI;
   const provider = ethers.provider;
 
   beforeEach(async () => {
-    [owner, alice, bob, ethContract, newEthContract, bnbContract, avalancheContract] =
-      await ethers.getSigners();
+    [
+      owner,
+      alice,
+      bob,
+      ethContract,
+      newEthContract,
+      bnbContract,
+      avalancheContract,
+      fantomContract,
+    ] = await ethers.getSigners();
     const ZLOIContract = await ethers.getContractFactory(nameSymbolContract, owner);
     token = (await ZLOIContract.deploy(
       nameSymbolContract,
@@ -380,6 +390,7 @@ describe('ZLOI token tests', () => {
       ).to.be.revertedWith('DAO: branch not minted');
 
       await token.createBranch(avalancheChain, avalancheContract.address, supply);
+      await token.createBranch(fantomChain, fantomContract.address, supply);
       await token.createBranch(bnbChain, bnbContract.address, supply);
       await token.transferFromBranch(
         avalancheChain,
@@ -389,10 +400,28 @@ describe('ZLOI token tests', () => {
         [supplyStringTotal]
       );
       await token.deprecateBranch(avalancheChain);
-
       await expect(
         token.transferBetweenBranches(avalancheChain, bnbChain, amountTransferTokens)
       ).to.be.revertedWith('DAO: branch is deprecated');
+      await token.transferFromBranch(
+        fantomChain,
+        supplyStringTotal,
+        transferFromBranchHash,
+        [owner.address],
+        [supplyStringTotal]
+      );
+      await token.deprecateBranch(fantomChain);
+      await expect(
+        token.transferBetweenBranches(bnbChain, fantomChain, amountTransferTokens)
+      ).to.be.revertedWith('DAO: branch is deprecated');
+
+      await expect(
+        token.transferBetweenBranches(
+          ethChain,
+          bnbChain,
+          ethers.BigNumber.from(supplyStringTotal).mul(2)
+        )
+      ).to.be.revertedWith('ERC20: transfer amount exceeds balance');
 
       await token.transferBetweenBranches(ethChain, bnbChain, amountTransferTokens);
 
@@ -402,10 +431,10 @@ describe('ZLOI token tests', () => {
       const branchBnbSupply = await token.branchSupply(bnbChain);
 
       expect(totalSupply.toString(), 'totalSupply').to.eq(
-        ethers.BigNumber.from(supplyStringTotal).mul(4).toString()
+        ethers.BigNumber.from(supplyStringTotal).mul(5).toString()
       );
       expect(currentChainSupply.toString(), 'currentChainSupply').to.eq(
-        ethers.BigNumber.from(supplyStringTotal).mul(2).toString()
+        ethers.BigNumber.from(supplyStringTotal).mul(3).toString()
       );
       expect(branchSupply.toString(), 'branchSupply').to.eq(
         ethers.BigNumber.from(supplyStringTotal).sub(amountTransferTokens).toString()
