@@ -4,6 +4,8 @@
 
 This repository contains the core smart contracts for the ZLOI DAO (Decentralized Automated Organization)
 
+ZLOI DAO Whitepaper: [https://zloi.io/whitepaper/](https://zloi.io/whitepaper/)
+
 ## Local tests
 
 ```
